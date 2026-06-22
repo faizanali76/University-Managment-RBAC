@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Director Central Administrative Control</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 20px; }
+        .navbar { background-color: #1e3a8a; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .navbar h1 { margin: 0; font-size: 20px; }
+        .logout-btn { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .logout-btn:hover { background-color: #dc2626; }
+
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+        @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+        .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        h3 { margin-top: 0; color: #1e3a8a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+
+        .form-group { margin-bottom: 14px; }
+        label { display: block; margin-bottom: 4px; color: #4b5563; font-weight: 600; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 4px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; }
+        .btn-submit { background-color: #2563eb; }
+        .btn-submit:hover { background-color: #1d4ed8; }
+        .btn-reset { background-color: #eab308; }
+        .btn-reset:hover { background-color: #ca8a04; }
+        .btn-danger { background-color: #dc2626; }
+        .btn-danger:hover { background-color: #b91c1c; }
+
+        .alert-box { padding: 12px; border-radius: 4px; margin-top: 14px; font-size: 14px; text-align: center; display: none; }
+        .success { background-color: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .error { background-color: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <h1>Director Central Administrative Panel</h1>
+    <button class="logout-btn" onclick="logout()">Secure Logout</button>
+</div>
+
+<div class="dashboard-grid">
+
+    <div class="card">
+        <h3>Onboard Brand New Student Profile</h3>
+        <form id="onboardForm">
+            <div class="form-group">
+                <label for="studentName">Full Legal Name</label>
+                <input type="text" id="studentName" placeholder="e.g., Faizan Ali" required>
+            </div>
+            <div class="form-group">
+                <label for="rollNo">Official Roll Number (Acts as Username)</label>
+                <input type="text" id="rollNo" placeholder="e.g., 24F-3029" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Student Email Address</label>
+                <input type="email" id="email" placeholder="e.g., faizan@student.edu" required>
+            </div>
+            <div class="form-group">
+                <label for="semester">Current Academic Semester</label>
+                <select id="semester" required>
+                    <option value="1">Semester 1</option>
+                    <option value="2">Semester 2</option>
+                    <option value="3">Semester 3</option>
+                    <option value="4">Semester 4</option>
+                    <option value="5">Semester 5</option>
+                    <option value="6">Semester 6</option>
+                    <option value="7">Semester 7</option>
+                    <option value="8">Semester 8</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="password">Temporary Initial Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-submit">Deploy Student Account</button>
+        </form>
+        <div class="alert-box" id="onboardMsg"></div>
+    </div>
+
+    <div class="card" style="display: flex; flex-direction: column; gap: 24px;">
+
+        <div>
+            <h3>Reset Student Grades Sheet Only</h3>
+            <p style="font-size: 13px; color: #64748b; margin-top: -5px;">Resets cumulative GPA and Attendance down to 0.0 metrics without touching the account login credentials.</p>
+            <div class="form-group">
+                <label for="resetRollNo">Target Student Roll Number</label>
+                <input type="text" id="resetRollNo" placeholder="e.g., 24F-3029">
+            </div>
+            <button class="btn btn-reset" onclick="resetGradesOnly()">Clear Performance Metrics</button>
+            <div class="alert-box" id="resetMsg"></div>
+        </div>
+
+        <div>
+            <h3>Systemic Account Wipeout Purge</h3>
+            <p style="font-size: 13px; color: #b91c1c; margin-top: -5px;">Warning: This executes a cascade delete that permanently expunges the student profile, academic rows, and credentials.</p>
+            <div class="form-group">
+                <label for="deleteId">Target Student Profile ID (Database numerical key)</label>
+                <input type="number" id="deleteId" placeholder="e.g., 5">
+            </div>
+            <button class="btn btn-danger" onclick="purgeAccountEntirely()">Wipe Profile Completely</button>
+            <div class="alert-box" id="purgeMsg"></div>
+        </div>
+
+    </div>
+
+    <div class="card" style="grid-column: span 2; margin-top: 24px;">
+        <h3>Master Student Tracking Roster</h3>
+        <p style="font-size: 13px; color: #64748b; margin-top: -5px;">Live database sync monitoring panel containing target operational keys and identifiers.</p>
+
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; text-align: left;">
+            <thead>
+            <tr style="background-color: #0f172a; color: white;">
+                <th style="padding: 12px; border-radius: 4px 0 0 4px;">System ID</th>
+                <th style="padding: 12px;">Full Name</th>
+                <th style="padding: 12px;">Roll Number</th>
+                <th style="padding: 12px;">Semester</th>
+                <th style="padding: 12px;">GPA</th>
+                <th style="padding: 12px; border-radius: 0 4px 4px 0;">Attendance</th>
+            </tr>
+            </thead>
+            <tbody id="rosterTableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Security check protection layout: Verify if token is active and user is a Director
+    window.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("jwtToken");
+        if (!token) {
+            alert("Unverified access sequence: Missing authentication token.");
+            window.location.href = "login.html";
+            return;
+        }
+
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const roles = payload.roles || [];
+        if (!roles.includes("ROLE_DIRECTOR")) {
+            alert("Access Denied: Your security profile does not hold Director privileges.");
+            window.location.href = "login.html";
+        }
+    });
+
+    // FEATURE 1: Submit the Onboarding Form
+    document.getElementById("onboardForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const msgBox = document.getElementById("onboardMsg");
+        msgBox.style.display = "none";
+
+        const payload = {
+            name: document.getElementById("studentName").value,
+            rollNo: document.getElementById("rollNo").value,
+            email: document.getElementById("email").value,
+            semester: parseInt(document.getElementById("semester").value),
+            password: document.getElementById("password").value
+        };
+
+        try {
+            const response = await fetch("http://localhost:8081/api/managment/student", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + localStorage.getItem("jwtToken")
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const responseText = await response.text();
+            msgBox.style.display = "block";
+
+            if (response.ok) {
+                msgBox.className = "alert-box success";
+                msgBox.innerText = responseText;
+                document.getElementById("onboardForm").reset();
+            } else {
+                msgBox.className = "alert-box error";
+                msgBox.innerText = "Operation Rejected: " + responseText;
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    });
+
+    // Automatically execute a fetch loop call right when the page finishes loading up
+    window.addEventListener("DOMContentLoaded", () => {
+        // Keep your existing security token verify check active here...
+
+        // Call our roster fetching sub-engine
+        refreshMasterRosterTable();
+    });
+
+    async function refreshMasterRosterTable() {
+        const tableBody = document.getElementById("rosterTableBody");
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">Syncing database record tracking pools...</td></tr>`;
+
+        try {
+            const response = await fetch("http://localhost:8081/api/managment/records/all", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + localStorage.getItem("jwtToken")
+                }
+            });
+
+            if (response.ok) {
+                const recordsArray = await response.json();
+                tableBody.innerHTML = ""; // Clear placeholder text
+
+                if (recordsArray.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">No active student profiles deployed in MySQL records pools.</td></tr>`;
+                    return;
+                }
+
+                // Loop through each academic record row object in the collection array list
+                recordsArray.forEach(record => {
+                    const rowHtml = `
+                    <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.15s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='transparent'">
+                        <td style="padding: 12px; font-weight: bold; color: #2563eb;">${record.student.id}</td>
+                        <td style="padding: 12px; font-weight: 500;">${record.student.name}</td>
+                        <td style="padding: 12px; font-family: monospace; background-color: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 8px;">${record.student.rollNo}</td>
+                        <td style="padding: 12px;">Semester ${record.student.semester}</td>
+                        <td style="padding: 12px; font-weight: bold; color: #16a34a;">${record.finalGpa.toFixed(2)}</td>
+                        <td style="padding: 12px; font-weight: 600;">${record.averageAttendance.toFixed(1)}%</td>
+                    </tr>
+                `;
+                    tableBody.innerHTML += rowHtml; // Inject row into view table body grid
+                });
+            }
+        } catch (error) {
+            console.error("Critical failure pulling master collection data:", error);
+        }
+    }
+
+    // FEATURE 2: Reset Academic Record Metrics Only (Uses Query Parameter)
+    async function resetGradesOnly() {
+        const rollNo = document.getElementById("resetRollNo").value;
+        const msgBox = document.getElementById("resetMsg");
+        msgBox.style.display = "none";
+
+        if (!rollNo) { alert("Please type a valid target student roll number."); return; }
+
+        try {
+            const response = await fetch(`http://localhost:8081/api/managment/records/reset?rollNo=${rollNo}`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": "Bearer " + localStorage.getItem("jwtToken")
+                }
+            });
+
+            const responseText = await response.text();
+            msgBox.style.display = "block";
+
+            if (response.ok) {
+                msgBox.className = "alert-box success";
+                msgBox.innerText = responseText;
+                document.getElementById("resetRollNo").value = "";
+            } else {
+                msgBox.className = "alert-box error";
+                msgBox.innerText = "Error: " + responseText;
+            }
+        } catch (error) { console.error(error); }
+    }
+
+    // FEATURE 3: Systemic Wipeout (Uses Path Variable)
+    async function purgeAccountEntirely() {
+        const id = document.getElementById("deleteId").value;
+        const msgBox = document.getElementById("purgeMsg");
+        msgBox.style.display = "none";
+
+        if (!id) { alert("Please input a valid database primary key index ID."); return; }
+        if (!confirm("Are you completely certain you want to erase this profile and all links across all tables?")) return;
+
+        try {
+            const response = await fetch(`http://localhost:8081/api/managment/students/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": "Bearer " + localStorage.getItem("jwtToken")
+                }
+            });
+
+            const responseText = await response.text();
+            msgBox.style.display = "block";
+
+            if (response.ok) {
+                msgBox.className = "alert-box success";
+                msgBox.innerText = responseText;
+                document.getElementById("deleteId").value = "";
+            } else {
+                msgBox.className = "alert-box error";
+                msgBox.innerText = "Error: " + responseText;
+            }
+        } catch (error) { console.error(error); }
+    }
+
+    // Secure logout utility sequence
+    function logout() {
+        localStorage.removeItem("jwtToken"); // Delete key pass from browser cache footprint memory
+        window.location.href = "login.html";
+    }
+</script>
+
+</body>
+</html>

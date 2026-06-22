@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Staff Registration</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .signup-card { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h2 { text-align: center; color: #1e3a8a; margin-bottom: 8px; }
+        p.subtitle { text-align: center; color: #6b7280; margin-bottom: 24px; font-size: 14px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; color: #4b5563; font-weight: 600; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 12px; background-color: #10b981; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+        button:hover { background-color: #059669; }
+        .links { text-align: center; margin-top: 20px; font-size: 14px; }
+        .links a { color: #1e3a8a; text-decoration: none; font-weight: bold; }
+        .message-box { padding: 12px; border-radius: 4px; margin-top: 16px; font-size: 14px; text-align: center; display: none; }
+        .success { background-color: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .error { background-color: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+    </style>
+</head>
+<body>
+
+<div class="signup-card">
+    <h2>Staff Account Registration</h2>
+    <p class="subtitle">Authorized Academic & Administrative Registration Panel Only</p>
+
+    <form id="signupForm">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="e.g., amir_prof or jonaid_director" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Official Email Address</label>
+            <input type="email" id="email" placeholder="username@university.edu.pk" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Account Password</label>
+            <input type="password" id="password" placeholder="••••••••" required>
+        </div>
+        <div class="form-group">
+            <label for="role">Requested System Role Clearance</label>
+            <select id="role" required>
+                <option value="ROLE_PROFESSOR">Faculty Professor / Teacher</option>
+                <option value="ROLE_DIRECTOR">Campus Administration Director</option>
+            </select>
+        </div>
+        <button type="submit">Create Staff Profile</button>
+    </form>
+
+    <div class="message-box" id="msgBox"></div>
+
+    <div class="links">
+        Already have an active account? <a href="login.html">Sign In Here</a>
+    </div>
+</div>
+
+<script>
+    document.getElementById("signupForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const usernameVal = document.getElementById("username").value;
+        const emailVal = document.getElementById("email").value;
+        const passwordVal = document.getElementById("password").value;
+        const roleVal = document.getElementById("role").value;
+        const msgBox = document.getElementById("msgBox");
+
+        msgBox.style.display = "none";
+        msgBox.className = "message-box";
+
+        // Wraps payload properties exactly matching your AuthController registration requirements
+        const signupPayload = {
+            username: usernameVal,
+            email: emailVal,
+            password: passwordVal,
+            roles: [roleVal] // Sent as an array element string structure
+        };
+
+        try {
+            const response = await fetch("http://localhost:8081/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(signupPayload)
+            });
+
+            if (response.ok) {
+                msgBox.style.display = "block";
+                msgBox.classList.add("success");
+                msgBox.innerText = "Success! Profile deployed. Redirecting to access gate...";
+
+                setTimeout(() => {
+                    window.location.href = "login.html";
+                }, 2000);
+            } else {
+                msgBox.style.display = "block";
+                msgBox.classList.add("error");
+                msgBox.innerText = "Registration Denied: Username or Email conflict footprint detected.";
+            }
+        } catch (error) {
+            msgBox.style.display = "block";
+            msgBox.classList.add("error");
+            msgBox.innerText = "Network Error: Link to registration sub-engine dropped.";
+            console.error(error);
+        }
+    });
+</script>
+
+</body>
+</html>

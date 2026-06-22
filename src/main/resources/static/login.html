@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Portal Login</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #1e3a8a; margin-bottom: 24px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; color: #4b5563; font-weight: 600; }
+        input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 12px; background-color: #1e3a8a; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button:hover { background-color: #172554; }
+        .error-message { color: #dc2626; margin-top: 12px; font-size: 14px; text-align: center; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <h2>University Management System</h2>
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="identifier">Roll Number / Email Address</label>
+            <input type="text" id="identifier" placeholder="e.g., 24F-3029 or admin@edu.pk" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="••••••••" required>
+        </div>
+        <button type="submit">Sign In to Portal</button>
+    </form>
+    <div style="text-align: center; margin-top: 20px; font-size: 14px;">
+        University Staff Member? <a href="signup.html" style="color: #1e3a8a; text-decoration: none; font-weight: bold;">Register Here</a>
+    </div>
+    <div class="error-message" id="errorBox">Invalid login credentials parameters.</div>
+
+</div>
+
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async function(event) {
+        event.preventDefault(); // Stop the browser from executing a default page refresh reload
+
+        const identifierInput = document.getElementById("identifier").value;
+        const passwordInput = document.getElementById("password").value;
+        const errorBox = document.getElementById("errorBox");
+
+        errorBox.style.display = "none";
+
+        // This maps directly to our backend AuthController payload requirements
+        const loginPayload = {
+            identifier: identifierInput,
+            password: passwordInput
+        };
+
+        try {
+            const response = await fetch("http://localhost:8081/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(loginPayload) // Converts JS object memory data into text JSON string stream
+            });
+
+            if (response.ok) {
+                // If login succeeds, your backend dumps the signed raw JWT token string as plain text text response
+                const jwtTokenString = await response.text();
+
+                // Save token safely inside the browser's persistent LocalStorage vault
+                localStorage.setItem("jwtToken", jwtTokenString);
+
+                // Decode token to find out which dashboard view to send the user to
+                const payloadBase64 = jwtTokenString.split('.')[1];
+                const decodedPayload = JSON.parse(atob(payloadBase64));
+                const rolesArray = decodedPayload.roles || [];
+
+                // Routing traffic flow depending on permissions profile
+                if (rolesArray.includes("ROLE_DIRECTOR")) {
+                    window.location.href = "director-dashboard.html";
+                } else if (rolesArray.includes("ROLE_STUDENT")) {
+                    window.location.href = "student-dashboard.html";
+                } else if (rolesArray.includes("ROLE_PROFESSOR")) {
+                    window.location.href = "professor-dashboard.html";
+                } else {
+                    alert("Account has no allocated application profile permissions mapping.");
+                }
+
+            } else {
+                errorBox.style.display = "block";
+                errorBox.innerText = "Access Rejected: Invalid Identity Badge or Password Mismatch.";
+            }
+        } catch (error) {
+            errorBox.style.display = "block";
+            errorBox.innerText = "Network Error: Unable to communicate with Spring Boot authentication server.";
+            console.error(error);
+        }
+    });
+</script>
+
+</body>
+</html>

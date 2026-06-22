@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Grade Management Panel</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 20px; }
+        .navbar { background-color: #047857; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .navbar h1 { margin: 0; font-size: 20px; }
+        .logout-btn { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .logout-btn:hover { background-color: #dc2626; }
+
+        .container { max-width: 500px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h3 { margin-top: 0; color: #047857; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; color: #4b5563; font-weight: 600; font-size: 14px; }
+        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+
+        .btn { width: 100%; padding: 12px; background-color: #047857; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+        .btn:hover { background-color: #065f46; }
+        .alert-box { padding: 12px; border-radius: 4px; margin-top: 14px; font-size: 14px; text-align: center; display: none; }
+        .success { background-color: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .error { background-color: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <h1>Faculty Evaluation & Marks Entry Management</h1>
+    <button class="logout-btn" onclick="logout()">Secure Logout</button>
+</div>
+
+<div class="container">
+    <h3>Modify Student Performance Metrics</h3>
+    <form id="gradeForm">
+        <div class="form-group">
+            <label for="studentRollNo">Student Roll Number Target</label>
+            <input type="text" id="studentRollNo" placeholder="e.g., 24F-3029" required>
+        </div>
+        <div class="form-group">
+            <label for="gpaInput">Allocated Semester GPA (0.00 - 4.00)</label>
+            <input type="number" step="0.01" min="0" max="4" id="gpaInput" placeholder="e.g., 3.75" required>
+        </div>
+        <div class="form-group">
+            <label for="attendanceInput">Average Net Attendance Percentage (0 - 100)</label>
+            <input type="number" step="0.1" min="0" max="100" id="attendanceInput" placeholder="e.g., 94.5" required>
+        </div>
+        <button type="submit" class="btn">Commit Metric Updates</button>
+    </form>
+    <div class="alert-box" id="msgBox"></div>
+
+    <div class="card" style="grid-column: span 2; margin-top: 24px;">
+        <h3>Master Student Tracking Roster</h3>
+        <p style="font-size: 13px; color: #64748b; margin-top: -5px;">Live database sync monitoring panel containing target operational keys and identifiers.</p>
+
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; text-align: left;">
+            <thead>
+            <tr style="background-color: #0f172a; color: white;">
+                <th style="padding: 12px; border-radius: 4px 0 0 4px;">System ID</th>
+                <th style="padding: 12px;">Full Name</th>
+                <th style="padding: 12px;">Roll Number</th>
+                <th style="padding: 12px;">Semester</th>
+                <th style="padding: 12px;">GPA</th>
+                <th style="padding: 12px; border-radius: 0 4px 4px 0;">Attendance</th>
+            </tr>
+            </thead>
+            <tbody id="rosterTableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Client-side guard rails: Validate if user is a Professor
+    window.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("jwtToken");
+        if (!token) { window.location.href = "login.html"; return; }
+
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const roles = payload.roles || [];
+        if (!roles.includes("ROLE_PROFESSOR")) {
+            alert("Access Denied: Highly restricted to authorized academic faculty staff only.");
+            window.location.href = "login.html";
+        }
+    });
+
+    document.getElementById("gradeForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const msgBox = document.getElementById("msgBox");
+        msgBox.style.display = "none";
+
+        // Collect parameters into a clean DTO matching your RecordUpdateRequest template
+        const payload = {
+            rollNo: document.getElementById("studentRollNo").value,
+            finalGpa: parseFloat(document.getElementById("gpaInput").value),
+            averageAttendance: parseFloat(document.getElementById("attendanceInput").value)
+        };
+
+        try {
+            const response = await fetch("http://localhost:8081/api/managment/records", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + localStorage.getItem("jwtToken")
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const text = await response.text();
+            msgBox.style.display = "block";
+
+            if (response.ok) {
+                msgBox.className = "alert-box success";
+                msgBox.innerText = text;
+                document.getElementById("gradeForm").reset();
+            } else {
+                msgBox.className = "alert-box error";
+                msgBox.innerText = "Operation Rejected: " + text;
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    });
+
+    function logout() {
+        localStorage.removeItem("jwtToken");
+        window.location.href = "login.html";
+    }
+
+    // Automatically execute a fetch loop call right when the page finishes loading up
+    window.addEventListener("DOMContentLoaded", () => {
+        // Keep your existing security token verify check active here...
+
+        // Call our roster fetching sub-engine
+        refreshMasterRosterTable();
+    });
+
+    async function refreshMasterRosterTable() {
+        const tableBody = document.getElementById("rosterTableBody");
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">Syncing database record tracking pools...</td></tr>`;
+
+        try {
+            const response = await fetch("http://localhost:8081/api/managment/records/all", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + localStorage.getItem("jwtToken")
+                }
+            });
+
+            if (response.ok) {
+                const recordsArray = await response.json();
+                tableBody.innerHTML = ""; // Clear placeholder text
+
+                if (recordsArray.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">No active student profiles deployed in MySQL records pools.</td></tr>`;
+                    return;
+                }
+
+                // Loop through each academic record row object in the collection array list
+                recordsArray.forEach(record => {
+                    const rowHtml = `
+                    <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.15s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='transparent'">
+                        <td style="padding: 12px; font-weight: bold; color: #2563eb;">${record.student.id}</td>
+                        <td style="padding: 12px; font-weight: 500;">${record.student.name}</td>
+                        <td style="padding: 12px; font-family: monospace; background-color: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 8px;">${record.student.rollNo}</td>
+                        <td style="padding: 12px;">Semester ${record.student.semester}</td>
+                        <td style="padding: 12px; font-weight: bold; color: #16a34a;">${record.finalGpa.toFixed(2)}</td>
+                        <td style="padding: 12px; font-weight: 600;">${record.averageAttendance.toFixed(1)}%</td>
+                    </tr>
+                `;
+                    tableBody.innerHTML += rowHtml; // Inject row into view table body grid
+                });
+            }
+        } catch (error) {
+            console.error("Critical failure pulling master collection data:", error);
+        }
+    }
+</script>
+
+</body>
+</html>

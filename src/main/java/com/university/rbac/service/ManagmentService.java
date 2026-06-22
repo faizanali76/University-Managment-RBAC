@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.List;
 
 @Service
 public class ManagmentService {
@@ -82,6 +83,10 @@ public class ManagmentService {
                 .orElseThrow(() -> new RuntimeException("No registered academic record card links found!"));
     }
 
+
+    public List<AcademicRecord> getAllAcademicRecord(){
+        return recordRepository.findAll();
+    }
 
     //Update record
 

@@ -10,6 +10,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/managment")
 public class ManagmentController {
@@ -65,4 +67,11 @@ public class ManagmentController {
         return ResponseEntity.ok(message);
     }
 
+
+    @GetMapping("/records/all")
+    @PreAuthorize("hasAnyRole('DIRECTOR', 'PROFESSOR')")
+    public ResponseEntity<List<AcademicRecord>> fetchAllRecords() {
+        List<AcademicRecord> collection = managmentService.getAllAcademicRecord();
+        return ResponseEntity.ok(collection);
+    }
 }

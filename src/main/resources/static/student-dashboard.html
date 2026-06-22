@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Academic Portal</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; }
+        .navbar { background-color: #0f172a; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .navbar h1 { margin: 0; font-size: 20px; }
+        .logout-btn { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .logout-btn:hover { background-color: #dc2626; }
+
+        .container { max-width: 600px; margin: 40px auto; background: white; padding: 35px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        h2 { margin-top: 0; color: #0f172a; font-size: 24px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
+
+        .profile-info { background-color: #f1f5f9; padding: 15px 20px; border-radius: 6px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 15px; color: #334155; }
+        .profile-info span { font-weight: bold; color: #0f172a; }
+
+        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .metric-box { padding: 25px; border-radius: 6px; text-align: center; color: white; }
+        .gpa-box { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+        .attendance-box { background: linear-gradient(135deg, #10b981, #059669); }
+
+        .metric-box h3 { margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; }
+        .metric-box .value { font-size: 36px; font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <h1>Student Academic Dashboard</h1>
+    <button class="logout-btn" onclick="logout()">Secure Logout</button>
+</div>
+
+<div class="container">
+    <h2>Academic Performance Evaluation</h2>
+
+    <div class="profile-info">
+        <div>Student Name: <span id="studentName">Loading...</span></div>
+        <div>Roll Number: <span id="studentRollNo">Loading...</span></div>
+        <div>Current Level: <span id="studentSemester">Loading...</span></div>
+    </div>
+
+    <div class="metrics-grid">
+        <div class="metric-box gpa-box">
+            <h3>Cumulative GPA</h3>
+            <div class="value" id="gpaDisplay">0.00</div>
+        </div>
+        <div class="metric-box attendance-box">
+            <h3>Average Attendance</h3>
+            <div class="value" id="attendanceDisplay">0.0%</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.addEventListener("DOMContentLoaded", async () => {
+        const token = localStorage.getItem("jwtToken");
+        if (!token) { window.location.href = "login.html"; return; }
+
+        try {
+            // Fetch the logged-in student's personal record card from the backend
+            const response = await fetch("http://localhost:8081/api/managment/my-card", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + token // Your custom filter strips this header string down
+                }
+            });
+
+            if (response.ok) {
+                // Jackson parses the raw entity graph data directly into a clean JavaScript object JSON object
+                const academicRecord = await response.json();
+
+                // Map the JSON nested properties cleanly into your HTML text spaces
+                document.getElementById("studentName").innerText = academicRecord.student.name;
+                document.getElementById("studentRollNo").innerText = academicRecord.student.rollNo;
+                document.getElementById("studentSemester").innerText = "Semester " + academicRecord.student.semester;
+
+                document.getElementById("gpaDisplay").innerText = academicRecord.finalGpa.toFixed(2);
+                document.getElementById("attendanceDisplay").innerText = academicRecord.averageAttendance.toFixed(1) + "%";
+            } else {
+                alert("Session Expired or Security Token Verification Failed.");
+                logout();
+            }
+        } catch (error) {
+            console.error("Connectivity fault mapping data payload:", error);
+        }
+    });
+
+    function logout() {
+        localStorage.removeItem("jwtToken");
+        window.location.href = "login.html";
+    }
+</script>
+
+</body>
+</html>
