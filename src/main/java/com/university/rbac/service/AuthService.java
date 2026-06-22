@@ -60,7 +60,7 @@ public class AuthService {
         return "User Registered successfully";
     }
 
-
+    
     public String loginUser(LoginRequest request){
         User user = userRepository.findByUsernameOrEmail(request.getIdentifier(), request.getIdentifier())
                 .orElseThrow(()-> new RuntimeException("Invalid Username or Email"));
