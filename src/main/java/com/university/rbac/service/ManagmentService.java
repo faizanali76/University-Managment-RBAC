@@ -80,7 +80,7 @@ public class ManagmentService {
     //view student card
     public AcademicRecord getStudentPersonalCard(String rollNo) {
         return recordRepository.findByStudentRollNo(rollNo)
-                .orElseThrow(() -> new RuntimeException("No registered academic record card links found!"));
+                .orElseThrow(() -> new RuntimeException("No registered academic record card link found!"));
     }
 
 

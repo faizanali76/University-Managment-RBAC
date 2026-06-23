@@ -19,7 +19,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
 
-    public JwtAuthFilter(JwtUtils jwtUtils){
+        public JwtAuthFilter(JwtUtils jwtUtils){
         this.jwtUtils= jwtUtils;
     }
 
