@@ -11,13 +11,17 @@ import com.university.rbac.repository.RoleRepository;
 import com.university.rbac.repository.StudentRepository;
 import com.university.rbac.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.context.annotation.Bean;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 @Service
 public class ManagmentService {
 
@@ -42,6 +46,7 @@ public class ManagmentService {
     //create student
 
     @Transactional
+    @CacheEvict(value = "studentRoster", allEntries = true)
     public String obBoardNewStudent(StudentCreationRequest request){
         if(studentRepository.existsByRollNo(request.getRollNo())){
             throw new RuntimeException("Roll No with same student Already Exist");
@@ -78,24 +83,33 @@ public class ManagmentService {
 
 
     //view student card
+    @Cacheable(value = "studentCards", key = "#rollNo")
     public AcademicRecord getStudentPersonalCard(String rollNo) {
+        log.info("Student Cache Miss Quering Database for roll number {}", rollNo);
         return recordRepository.findByStudentRollNo(rollNo)
                 .orElseThrow(() -> new RuntimeException("No registered academic record card link found!"));
     }
 
 
+    @Cacheable(value = "studentRoster")
     public List<AcademicRecord> getAllAcademicRecord(){
+        System.out.println("Cache Miss Querying DB");
         return recordRepository.findAll();
     }
 
     //Update record
+    @Caching ( evict = {
+        @CacheEvict(value = "studentRoster", allEntries = true),
+        @CacheEvict(value = "studentCards", key = "#rollNo")
 
+    }
+    )
     public String updateStudentRecord(RecordUpdateRequest request) {
         AcademicRecord record = recordRepository.findByStudentRollNo(request.getRollNo())
                 .orElseThrow(() -> new RuntimeException("No academic record found for this roll number!"));
 
         record.setFinalGpa(request.getFinalGpa());
-        record.setAverageAttendance(request.getAverageAttendance());
+        record.setAverageAttendance(request .getAverageAttendance());
 
         recordRepository.save(record);
         return "Grades successfully modified for: " + request.getRollNo();
@@ -105,6 +119,10 @@ public class ManagmentService {
 
     // delete record
 
+    @Caching(evict = {
+            @CacheEvict(value = "studentRoster", allEntries = true),
+            @CacheEvict(value = "studentCards", key = "#rollNo") // Wipe ONLY this specific student's card from RAM!
+    })
     public String clearAcademicRecord(String rollNo){
         AcademicRecord record = recordRepository.findByStudentRollNo(rollNo)
                 .orElseThrow(()-> new RuntimeException("Academic Record Not Found!"));
@@ -119,6 +137,7 @@ public class ManagmentService {
 
 
     @Transactional
+    @CacheEvict(value = "studentRoster", allEntries = true)
     public String deleteStudent(Long id){
         Student student = studentRepository.findById(id)
                 .orElseThrow(()-> new RuntimeException("Student ID not found"));
