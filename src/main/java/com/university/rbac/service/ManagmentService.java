@@ -93,14 +93,14 @@ public class ManagmentService {
 
     @Cacheable(value = "studentRoster")
     public List<AcademicRecord> getAllAcademicRecord(){
-        System.out.println("Cache Miss Querying DB");
+       log.info("Cache Miss Querying DB");
         return recordRepository.findAll();
     }
 
     //Update record
     @Caching ( evict = {
         @CacheEvict(value = "studentRoster", allEntries = true),
-        @CacheEvict(value = "studentCards", key = "#rollNo")
+        @CacheEvict(value = "studentCards", key = "#request.rollNo")
 
     }
     )
