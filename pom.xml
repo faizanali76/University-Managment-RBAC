@@ -46,11 +46,17 @@
             <artifactId>micrometer-tracing-bridge-otel</artifactId>
         </dependency>
 
+        <!-- THIS is what was missing — the OTel autoconfigure SPI that actually wires everything -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>
+            <version>1.62.0</version>
+        </dependency>
+
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-exporter-zipkin</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
